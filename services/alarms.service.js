@@ -13,16 +13,6 @@ class AlarmsService {
     }
   };
 
-  // 내보내기
-  releaseAlarm = async (userId, isRead, message) => {
-    try {
-      return await this.alarmsRepository.releaseAlarm(userId, isRead, message);
-    } catch (e) {
-      console.error(e.message);
-      throw new Error("AlarmsRepository / releaseAlarm");
-    }
-  };
-
   // 회원에 해당하는 알림 목록 조회
   findAllAlarm = async (userId) => {
     try {

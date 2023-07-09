@@ -2,12 +2,14 @@ const BoatsService = require("../services/boats.service");
 const CommentsService = require("../services/comments.service");
 const CrewsService = require("../services/crews.service");
 const UsersService = require("../services/users.service");
+const AlarmsService = require("../services/alarms.service");
 
 class BoatsController {
   boatsService = new BoatsService();
   usersService = new UsersService();
   crewsService = new CrewsService();
   commentsService = new CommentsService();
+  alarmsService = new AlarmsService();
 
   // 1. 모임 생성
   createBoat = async (req, res, next) => {
@@ -133,31 +135,28 @@ class BoatsController {
       const comments = await this.commentsService.findAllComment(boatId);
 
       // captain를 check해서 조회
+      // 가입 유저(모임에 참여 X)
       if (!userId) {
-        return res.status(200).json({ boat, personType: "person" });
+        const response = { boat, personType: "person" };
+        return res.status(200).json(response);
       }
+      // captain일 경우
       if (userId === boat.captainId) {
-        // captain
-        return res
-          .status(200)
-          .json({ boat, crew, comments, personType: "captain" });
+        const response = { boat, crew, comments, personType: "captain" };
+        return res.status(200).json(response);
       }
 
-      // crewMember일 경우
-      let isCrew = false;
       for (let i = 0; i < crew.length; i++) {
+        // crew일 경우
         if (userId === crew[i].userId) {
-          // crew일 경우
-          isCrew = true;
-          break;
+          return res
+            .status(200)
+            .json({ boat, crew, comments, personType: "crew" });
         }
       }
-      if (isCrew) {
-        return res
-          .status(200)
-          .json({ boat, crew, comments, personType: "crew" });
-      }
-      return res.status(200).json({ boat, personType: "person" });
+      // guest일 경우
+      const response = { boat, personType: "person" };
+      return res.status(200).json(response);
     } catch (e) {
       console.error(e.message);
       return res.status(400).json({
@@ -233,12 +232,12 @@ class BoatsController {
           .status(412)
           .json({ errorMessage: "유효하지 않은 maxCrewNum입니다." });
       }
-      if (latitude < 1) {
+      if (latitude === null1) {
         return res
           .status(412)
           .json({ errorMessage: "유효하지 않은 latitude입니다." });
       }
-      if (longitude < 1) {
+      if (longitude === null) {
         return res
           .status(412)
           .json({ errorMessage: "유효하지 않은 longitude입니다." });
@@ -348,7 +347,12 @@ class BoatsController {
       }
 
       // 전환 완료
-      return res.status(200).json({ message: "모집 글 상태를 전환 완료." });
+      if (isDone === false) {
+        return res.status(200).json({ message: "crew 모집 글 공개 완료" });
+      }
+      if (isDone === true) {
+        return res.status(200).json({ message: "crew 모집 글 비공개 완료" });
+      }
     } catch (e) {
       console.error(e.message);
       return res.status(400).json({
@@ -393,14 +397,31 @@ class BoatsController {
         boat.deletedAt = deletedAt;
       }
 
+      const crewMember = await this.crewsService.findAllCrew(boatId);
+
       const deletedAtCount = await this.boatsService.updateBoat(boat);
       // softDelete 안됐을 경우
       if (!deletedAtCount) {
         return res.status(404).json({ errorMessage: "삭제된 글이 없습니다." });
       }
+      if (deletedAtCount) {
+        // Crews 테이블에서 boatId에 해당하는 부분 삭제
+        await this.crewsService.destroyCrews(boatId);
+        // Comments도 softdelete 상태 만들기
+        const deletedAt = new Date();
+        await this.commentsService.deleteCommentByBoatDelete(deletedAt, boatId);
 
-      // 삭제 완료
-      return res.status(200).json({ message: "모집 글을 삭제 완료." });
+        // 삭제했다는 알림 만들기
+        for (let i = 0; i < crewMember.length; i++) {
+          await this.alarmsService.createAlarm({
+            userId: crewMember[i].userId,
+            isRead: false,
+            message: `${boat.title} 글이 삭제됐습니다.`,
+          });
+        }
+        // 삭제 완료
+        return res.status(200).json({ message: "모집 글을 삭제 완료." });
+      }
     } catch (e) {
       console.error(e.message);
       return res.status(400).json({

@@ -67,6 +67,15 @@ class CrewsService {
       throw new Error("CrewsService / findOneByNickName");
     }
   };
+
+  destroyCrews = async (boatId) => {
+    try {
+      return await this.crewsRepository.destroyCrews(boatId);
+    } catch (e) {
+      console.error(e.message);
+      throw new Error("CrewsService / destroyCrews");
+    }
+  };
 }
 
 module.exports = CrewsService;

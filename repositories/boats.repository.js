@@ -90,7 +90,7 @@ class BoatsRepository {
           "address",
           "createdAt",
         ],
-        where: { boatId, isDone: false, deletedAt: null },
+        where: { boatId, deletedAt: null },
         include: [
           {
             model: Crews,

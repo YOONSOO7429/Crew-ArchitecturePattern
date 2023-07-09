@@ -67,6 +67,19 @@ class CommentsService {
       throw new Error("CommentsService / deleteComment");
     }
   };
+
+  // 글 삭제와 함께 삭제 처리
+  deleteCommentByBoatDelete = async (deletedAt, boatId) => {
+    try {
+      return await this.commentsRepository.deleteCommentByBoatDelete(
+        deletedAt,
+        boatId
+      );
+    } catch (e) {
+      console.error(e.message);
+      throw new Error("CommentsService / deleteCommentByBoatDelete");
+    }
+  };
 }
 
 module.exports = CommentsService;

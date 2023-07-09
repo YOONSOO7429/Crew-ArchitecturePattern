@@ -1,7 +1,7 @@
 const { Alarms } = require("../models");
 
 class AlarmsRepository {
-  // 참가하기
+  // 알림 만들기
   createAlarm = async (userId, isRead, message) => {
     try {
       return await Alarms.create(userId, isRead, message);
@@ -10,6 +10,7 @@ class AlarmsRepository {
       throw new Error("AlarmsRepository / createAlarm");
     }
   };
+
   // 회원에 해당하는 알림 목록 조회
   findAllAlarm = async (userId) => {
     try {
