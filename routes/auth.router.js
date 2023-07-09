@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const passport = require("passport");
-
+const authJwt = require("../middlewares/authMiddleware");
 //* 카카오로 로그인하기 라우터 ***********************
 //? /kakao로 요청오면, 카카오 로그인 페이지로 가게 되고, 카카오 서버를 통해 카카오 로그인을 하게 되면, 다음 라우터로 요청한다.
 router.get("/auth/kakao", passport.authenticate("kakao"));
@@ -23,13 +23,26 @@ router.get(
   }
 );
 
-router.get("/auth/logout", (req, res) => {
-  req.logout(function (err) {
-    if (err) {
-      console.error(err);
-      return res.redirect("/"); // 로그아웃 중 에러가 발생한 경우에 대한 처리
-    }
-    res.redirect("http://localhost:3000/"); // 로그아웃 성공 시 리다이렉트
-  });
+router.get("/auth/logout", async (req, res) => {
+  try {
+    req.session.destroy();
+    res.clearCookie("authorization");
+    res.status(200).json({ message: "로그아웃 성공" });
+  } catch (e) {
+    console.error(e.message);
+    throw new Error("로그아웃 실패");
+  }
 });
+
+// userId 넣어주는 API
+router.get("/currentUser", authJwt, async (req, res) => {
+  try {
+    const { userId } = res.locals.user;
+    return res.status(200).json({ userId });
+  } catch (e) {
+    console.log("currentUser error : ", e);
+    return res.status(400).json({ errorMessage: "userId 전달 실패" });
+  }
+});
+
 module.exports = router;

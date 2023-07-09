@@ -56,12 +56,12 @@ class BoatsController {
           .status(412)
           .json({ errorMessage: "address가 작성된 내용이 없습니다." });
       }
-      if (latitude < 1) {
+      if (latitude === null) {
         return res
           .status(412)
           .json({ errorMessage: "address가 작성된 내용이 없습니다." });
       }
-      if (longitude < 1) {
+      if (longitude === null) {
         return res
           .status(412)
           .json({ errorMessage: "address가 작성된 내용이 없습니다." });

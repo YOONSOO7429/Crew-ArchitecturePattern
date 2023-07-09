@@ -11,7 +11,6 @@ const boatRouter = require("./routes/boats.routes");
 const commentRouter = require("./routes/comments.routes");
 const alarmRouter = require("./routes/alarms.routes");
 const userRouter = require("./routes/user.routes");
-const kakaoRouter = require("./routes/passport-kakao");
 
 // 설정
 const cookieParser = require("cookie-parser");
@@ -75,14 +74,7 @@ passport.deserializeUser((token, done) => {
 
 kakao(); // kakaoStrategy.js의 module.exports를 실행합니다.
 
-app.use("/", [
-  boatRouter,
-  authRouter,
-  alarmRouter,
-  userRouter,
-  commentRouter,
-  kakaoRouter,
-]);
+app.use("/", [boatRouter, authRouter, alarmRouter, userRouter, commentRouter]);
 
 const PORT = 3000;
 app.listen(PORT, () => {
