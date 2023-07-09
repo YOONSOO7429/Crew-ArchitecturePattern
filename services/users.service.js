@@ -3,6 +3,16 @@ const UsersRepository = require("../repositories/users.repository");
 class UsersService {
   usersRepository = new UsersRepository();
 
+  // user 정보 받기
+  findOneUser = async (userId) => {
+    try {
+      return await this.usersRepository.findOneUser(userId);
+    } catch (e) {
+      console.error(e.message);
+      throw new Error("UsersService / findOneUser");
+    }
+  };
+
   // user의 nickName 가져오기
   findOneUserNickName = async (userId) => {
     try {

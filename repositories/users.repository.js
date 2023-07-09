@@ -1,6 +1,19 @@
 const { Users, Boats, Crews } = require("../models");
 
 class UsersRepository {
+  // user 정보 받기
+  findOneUser = async (userId) => {
+    try {
+      return await Users.findOne({
+        where: { userId },
+        raw: true,
+      });
+    } catch (e) {
+      console.error(e.message);
+      throw new Error("UserRepository / findOneUser");
+    }
+  };
+
   // user의 nickName 가져오기
   findOneUserNickName = async (userId) => {
     try {
@@ -18,7 +31,7 @@ class UsersRepository {
   findWritedBoats = async (userId) => {
     try {
       return await Boats.findAll({
-        attributes: ["boatId", "title", "createdAt", "isDone"],
+        attributes: ["boatId", "captain", "title", "createdAt", "isDone"],
         where: { userId, deletedAt: null },
         order: [["createdAt", "DESC"]],
         raw: true,
