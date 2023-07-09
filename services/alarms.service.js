@@ -22,6 +22,26 @@ class AlarmsService {
       throw new Error("AlarmsService / findAllAlarm");
     }
   };
+
+  // 알람 하나만 조회
+  findOneAlarm = async (alarmId, userId) => {
+    try {
+      return await this.alarmsRepository.findOneAlarm(alarmId, userId);
+    } catch (e) {
+      console.error(e.message);
+      throw new Error("AlarmsService / findOneAlarm");
+    }
+  };
+
+  // 알람 업데이트
+  updateAlarm = async (alarmId, userId) => {
+    try {
+      return await this.alarmsRepository.updateAlarm();
+    } catch (e) {
+      console.error(e.message);
+      throw new Error("AlarmsService / updateAlarm");
+    }
+  };
 }
 
 module.exports = AlarmsService;

@@ -24,6 +24,31 @@ class AlarmsRepository {
       throw new Error("AlarmsRepository / findAllAlarm");
     }
   };
+
+  // 알람 하나만 조회
+  findOneAlarm = async (alarmId, userId) => {
+    try {
+      return await Alarms.findOne({
+        where: { alarmId, userId },
+      });
+    } catch (e) {
+      console.error(e.message);
+      throw new Error("AlarmsRepository / findOneAlarm");
+    }
+  };
+
+  // 알람 업데이트
+  updateAlarm = async (alarmId, userId) => {
+    try {
+      return await Alarms.update(
+        { isRead: true },
+        { where: { alarmId, userId } }
+      );
+    } catch (e) {
+      console.error(e.message);
+      throw new Error("AlarmsRepository / updateAlarm");
+    }
+  };
 }
 
 module.exports = AlarmsRepository;

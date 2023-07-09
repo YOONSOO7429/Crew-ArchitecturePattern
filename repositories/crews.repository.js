@@ -12,11 +12,11 @@ class CrewsRepository {
   };
 
   // 내보내기
-  releaseCrew = async (boatId, nickName) => {
+  releaseCrew = async (boatId, userId) => {
     try {
       return await Crews.update(
-        { isReleased },
-        { where: { boatId, nickName } }
+        { isReleased: true },
+        { where: { boatId, userId } }
       );
     } catch (e) {
       console.error(e.message);
@@ -51,19 +51,33 @@ class CrewsRepository {
   // Crew인지 확인
   isExistCrew = async (boatId, userId) => {
     try {
-      return await Crews.findOne({ where: { boatId, userId } });
+      return await Crews.findOne({
+        where: { boatId, userId, isReleased: false },
+      });
     } catch (e) {
       console.error(e.message);
       throw new Error("CrewsRepository / isExistCrew");
     }
   };
 
+  // 방출된 Crew인지 확인
+  isReleasedCrew = async (boatId, userId) => {
+    try {
+      return await Crews.findOne({
+        where: { boatId, userId, isReleased: true },
+      });
+    } catch (e) {
+      console.error(e.message);
+      throw new Error("CrewsRepository / isReleasedCrew");
+    }
+  };
+
   // nickName으로 Crew 확인
-  findOneByNickName = async (boatId, nickName) => {
+  findOneByNickName = async (boatId, userId) => {
     try {
       return await Crews.findOne({
         attributes: ["userId"],
-        where: { boatId, nickName },
+        where: { boatId, userId },
         raw: true,
       });
     } catch (e) {

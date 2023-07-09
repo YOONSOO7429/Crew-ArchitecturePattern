@@ -126,7 +126,9 @@ class CommentsController {
       }
 
       // comment 글 확인
-      const isExistComment = await this.commentsService.findByPkComment(boatId);
+      const isExistComment = await this.commentsService.findByPkComment(
+        commentId
+      );
       if (!isExistComment) {
         return res
           .status(404)

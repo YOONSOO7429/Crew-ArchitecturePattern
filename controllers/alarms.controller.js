@@ -15,12 +15,16 @@ class AlarmsController {
   findAllAlarm = async (req, res, next) => {
     try {
       // user 정보
-      const { userId } = res.locals.user;
+      const userId = res.locals.user ? res.locals.user.userId : null;
+
+      if (userId === null) {
+        return res.status(200).json({ message: "게스트 입니다." });
+      }
 
       // user 정보에 맞춰 알람 호출 해주기
       const alarms = await this.alarmsService.findAllAlarm(userId);
       // alarms 없을 경우
-      if (!alarms) {
+      if (!alarms || alarms.length === 0) {
         return res
           .status(404)
           .json({ errorMessage: "조회된 알림이 없습니다." });
@@ -30,6 +34,33 @@ class AlarmsController {
       console.error(e.message);
       return res.status(400).json({
         errorMessage: "알람 목록조회 실패. 요청이 올바르지 않습니다.",
+      });
+    }
+  };
+
+  readAlarm = async (req, res, next) => {
+    try {
+      // user 정보
+      const { userId } = res.locals.user;
+      // params로 alarmId
+      const { alarmId } = req.params;
+      const alarm = await this.alarmsService.findOneAlarmd(alarmId, userId);
+      if (userId !== alarm.userId) {
+        return res
+          .status(401)
+          .json({ errorMessage: "알림 읽음 처리. 권한이 없습니다." });
+      }
+
+      // alarmId에 해당하는 부분 isRead 처리
+      const updateCount = await this.alarmsService.updateAlarm(alarmId, userId);
+      if (!updateCount) {
+        return res.status(404).json({ errorMessage: "알림 읽기 처리 실패." });
+      }
+      return res.status(200).json({ message: "알림 읽음 처리 성공." });
+    } catch (e) {
+      console.log(e);
+      return res.status(400).json({
+        errorMessage: "알림 읽음 처리 실패. 요청이 올바르지 않습니다.",
       });
     }
   };
@@ -55,23 +86,20 @@ class AlarmsController {
         return res
           .status(400)
           .json({ errorMessage: "본인이 작성한 글에는 참가할 수 없습니다." });
-      } else {
-        // 이미 참가한 사용자인지 확인
-        const existingCrew = await this.crewsService.isExistCrew(
-          userId,
-          boatId
-        );
-        if (existingCrew) {
-          if (existingCrew.isReleased === false) {
-            return res
-              .status(400)
-              .json({ errorMessage: "이미 참가한 글입니다." });
-          } else if (existingCrew.isRelease === true) {
-            return res
-              .status(400)
-              .json({ errorMessage: "Captain의 권한으로 참가할 수 없습니다." });
-          }
-        }
+      }
+      // 이미 참가한 사용자인지 확인
+      const existingCrew = await this.crewsService.isExistCrew(userId, boatId);
+      const isReleasedCrew = await this.crewsService.isReleasedCrew(
+        userId,
+        boatId
+      );
+      if (existingCrew) {
+        return res.status(403).json({ errorMessage: "이미 참가한 글입니다." });
+      }
+      if (isReleasedCrew) {
+        return res
+          .status(401)
+          .json({ errorMessage: "Captain의 권한으로 참가할 수 없습니다." });
       }
 
       // maxCrewNum, crewNum 숫자 비교
@@ -109,7 +137,7 @@ class AlarmsController {
       const boat = await this.boatsService.findOneBoat(boatId);
 
       // body로 내보낼 crew의 nickName 보내기
-      const { nickName } = req.body;
+      const { id } = req.body;
 
       // 글 확인
       if (!boat) {
@@ -124,14 +152,14 @@ class AlarmsController {
           .json({ errorMessage: "모임 내보내기 권한이 없습니다." });
       }
       // boatId로 crew 조회
-      const crew = await this.crewsService.findOneByNickName(boatId, nickName);
+      const crew = await this.crewsService.findOneByNickName(boatId, {
+        userId: id,
+      });
 
       // crew 확인
       if (crew) {
-        const updateCount = await this.crewsService.releaseCrew(
-          boatId,
-          nickName
-        );
+        const userId = id;
+        const updateCount = await this.crewsService.releaseCrew(boatId, userId);
         if (!updateCount) {
           return res.status(404).json({ errorMessage: "내보내기 실패." });
         } else {
@@ -185,12 +213,10 @@ class AlarmsController {
           errorMessage: "나가기가 정상적으로 처리되지 않았습니다.",
         });
       }
+
+      const deletedAt = new Date();
       // 작성했던 comment deletedAt으로 처리하기
-      await this.commentsService.deleteComment(
-        { deletedAt: new Date() },
-        boatId,
-        userId
-      );
+      await this.commentsService.deleteComment(deletedAt, boatId, userId);
 
       // 알람생성
       await Alarms.create({

@@ -5,6 +5,7 @@ const loginMiddleware = require("../middlewares/loginMiddleware"); // 로그인�
 const AlarmsController = require("../controllers/alarms.controller");
 const alarmsController = new AlarmsController();
 router.get("/alarm", loginMiddleware, alarmsController.findAllAlarm);
+router.put("/alarm/:alarmId", authJwt, alarmsController.readAlarm);
 router.post("/boat/:boatId/join", authJwt, alarmsController.joinAlarm);
 router.post("/boat/:boatId/release", authJwt, alarmsController.releaseAlarm);
 router.post("/boat/:boatId/exit", authJwt, alarmsController.exitAlarm);
