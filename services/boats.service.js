@@ -41,9 +41,14 @@ class BoatsService {
   };
 
   // 전체 모임글 조회
-  findAllBoat = async () => {
+  findAllBoat = async (swLatitude, swLongitude, neLatitude, neLongitude) => {
     try {
-      return await this.boatsRepository.findAllBoat();
+      return await this.boatsRepository.findAllBoat(
+        swLatitude,
+        swLongitude,
+        neLatitude,
+        neLongitude
+      );
     } catch (e) {
       console.error(e.message);
       throw new Error("BoatsService / findAllBoat");

@@ -1,8 +1,11 @@
 // import
 const express = require("express");
+const app = express();
 const kakao = require("./passport/kakaoStrategy");
 const passport = require("passport");
 const path = require("path");
+const http = require("http");
+const server = http.createServer(app);
 require("dotenv").config();
 
 // router
@@ -16,8 +19,6 @@ const userRouter = require("./routes/user.routes");
 const cookieParser = require("cookie-parser");
 const session = require("express-session");
 const cors = require("cors");
-
-const app = express();
 
 app.use(
   cors({
@@ -74,9 +75,26 @@ passport.deserializeUser((token, done) => {
 
 kakao(); // kakaoStrategy.js의 module.exports를 실행합니다.
 
+const io = require("socket.io")(server, {
+  cors: {
+    origin: [
+      "*.ysizuku.com",
+      "http://localhost:3000",
+      "http://react.ysizuku.com",
+      "https://react.ysizuku.com",
+    ],
+    credentials: true,
+  },
+});
+
+const socketHandlers = require("./socket.io");
+
+// app.set("io", io);
+socketHandlers(io);
+
 app.use("/", [boatRouter, authRouter, alarmRouter, userRouter, commentRouter]);
 
-const PORT = 3000;
-app.listen(PORT, () => {
+const PORT = 3001;
+server.listen(PORT, () => {
   console.log(PORT, "포트 번호로 서버가 실행되었습니다.");
 });

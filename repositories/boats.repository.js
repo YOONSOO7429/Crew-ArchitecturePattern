@@ -1,4 +1,5 @@
 const { Boats, sequelize, Crews } = require("../models");
+const { Op } = require("sequelize");
 
 class BoatsRepository {
   //
@@ -40,7 +41,7 @@ class BoatsRepository {
   };
 
   // 전체 모임 조회
-  findAllBoat = async () => {
+  findAllBoat = async (swLatitude, swLongitude, neLatitude, neLongitude) => {
     try {
       return await Boats.findAll({
         attributes: [
@@ -59,8 +60,12 @@ class BoatsRepository {
           "latitude",
           "longitude",
         ],
-        where: { isDone: false, deletedAt: null },
-        group: ["Boats.boatId"],
+        where: {
+          isDone: false,
+          deletedAt: null,
+          latitude: { [Op.between]: [swLatitude, neLatitude] },
+          longitude: { [Op.between]: [swLongitude, neLongitude] },
+        },
         raw: true,
       });
     } catch (e) {

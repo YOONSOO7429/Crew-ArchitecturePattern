@@ -97,13 +97,26 @@ class BoatsController {
   // 2. 모임 전체 조회
   getBoats = async (req, res, next) => {
     try {
-      const boats = await this.boatsService.findAllBoat();
+      // 범위 설정에 필요한 latitude와 longitude 받기
+      let data = req.query;
+      let swLatitude = data.Bounds.swLatLng[0];
+      let swLongitude = data.Bounds.swLatLng[1];
+      let neLatitude = data.Bounds.neLatLng[0];
+      let neLongitude = data.Bounds.neLatLng[1];
+      const boats = await this.boatsService.findAllBoat(
+        swLatitude,
+        swLongitude,
+        neLatitude,
+        neLongitude
+      );
       // 작성된 모집 글이 없을 경우
-      if (boats.length === 0) {
-        return res
-          .status(400)
-          .json({ errorMessage: "작성된 모집 글이 없습니다." });
+      if (!boats) {
+        return res.status(202).json({ boats: [] });
       }
+      // if (boats.length > 10) {
+      //   return res.status(200).json({ boatNum: boats.length });
+      // }
+
       return res.status(200).json({ boats });
     } catch (e) {
       console.error(e.message);
